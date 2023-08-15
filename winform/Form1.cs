@@ -28,7 +28,7 @@ namespace TestRunner
             UpdateTreeAsync();
             this.timer1.Interval = 800;
             this.timer1.Tick += Timer1_Tick;
-            this.comboBox1.Enabled = false;
+            this.comboBox1.Enabled = false;  
         }
 
         private void Timer1_Tick(object? sender, EventArgs e)
@@ -175,9 +175,26 @@ namespace TestRunner
             }
             this.TestTree.Nodes[0].Nodes.AddRange(nodes.ToArray());
         }
+        private void AppendColorLog(string msg,Color color)
+        {
+            this.richTextBox1.SelectionColor = color;
+            this.richTextBox1.AppendText($"{msg}\r\n");
+            this.richTextBox1.SelectionColor = SystemColors.InactiveCaption;
+        }
         private void AppendLog(string msg)
         {
-            this.richTextBox1.AppendText($"{msg} \r\n");
+            var passedIndex = msg.IndexOf("Passed");
+            var errorIndex = msg.IndexOf("Failed");
+            var successfulIndex = msg.IndexOf("Successful");
+            if (passedIndex>-1 || successfulIndex>-1)
+            {
+                AppendColorLog(msg, Color.Green);
+            }else if (errorIndex > -1)
+            {
+                AppendColorLog(msg,Color.Red);
+            }
+            else
+                this.richTextBox1.AppendText($"{msg} \r\n");
             this.richTextBox1.ScrollToCaret();
         }
 
