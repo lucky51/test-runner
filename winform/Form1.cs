@@ -13,6 +13,7 @@ namespace TestRunner
     public partial class Form1 : Form
     {
         private string _testPath = string.Empty;
+
         public Form1(string testDir)
         {
             InitializeComponent();
@@ -22,19 +23,30 @@ namespace TestRunner
             this.TestTree.Nodes.Add(root);
             this.TestTree.NodeMouseClick += TestTree_NodeMouseClick;
             _testPath = testDir;
+
             this.richTextBox1.AppendText(testDir);
+            UpdateTreeAsync();
+            this.timer1.Interval = 800;
+            this.timer1.Tick += Timer1_Tick;
+            this.comboBox1.Enabled = false;
+        }
 
-            Task.Run(() =>
+        private void Timer1_Tick(object? sender, EventArgs e)
+        {
+            this.timer1.Stop();
+            if (string.IsNullOrWhiteSpace(this.comboBox1.Text) || this.comboBox1.Text.Length < 4)
             {
-
-                var nodes = ExecDotnetTest((curr) =>
-                {
-                    this.richTextBox1.Invoke(AppendLog, curr);
-                });
-                this.TestTree.Invoke(UpdateTree, nodes);
-
-            });
-
+                return;
+            }
+            var k = treeSearchMap?.Keys.ToList().FindAll(x => x.Contains(this.comboBox1.Text, StringComparison.OrdinalIgnoreCase))?.FirstOrDefault();
+            if (k != null && treeSearchMap?.TryGetValue(k, out var node) == true)
+            {
+                this.TestTree.SelectedNode.BackColor = Color.White;
+                this.TestTree.SelectedNode = node;
+                this.TestTree.SelectedNode.BackColor = Color.CornflowerBlue;
+                //this.TestTree.Focus();
+            }
+            this.richTextBox1.Invoke(AppendLog, $"Selected Node:{this.TestTree.SelectedNode.Text}");
         }
 
         private void TestTree_NodeMouseClick(object? sender, TreeNodeMouseClickEventArgs e)
@@ -56,13 +68,6 @@ namespace TestRunner
 
             }
         }
-
-        private void RefreshBtn_Click(object sender, EventArgs e)
-        {
-
-
-        }
-
         private List<TreeNode> ExecDotnetTest(Action<string> act)
         {
 
@@ -156,18 +161,8 @@ namespace TestRunner
         private void refreshToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.TestTree.Nodes[0].Nodes.Clear();
-            Task.Run(() =>
-            {
-
-                var nodes = ExecDotnetTest((curr) =>
-                {
-                    this.richTextBox1.Invoke(AppendLog, curr);
-                });
-                this.TestTree.Invoke(UpdateTree, nodes);
-
-            });
-
-
+            this.comboBox1.Enabled = false;
+            UpdateTreeAsync();
         }
         private void UpdateTree(List<TreeNode> nodes)
         {
@@ -281,23 +276,26 @@ namespace TestRunner
                 }
                 _testPath = folderBrowserDialog1.SelectedPath;
                 AppendLog($"unit test project is selected : {_testPath}");
-                Task.Run(() =>
-                {
-                    var nodes = ExecDotnetTest((curr) =>
-                    {
-                        this.richTextBox1.Invoke(AppendLog, curr);
-                    });
-                    this.TestTree.Invoke(UpdateTree, nodes);
-
-                });
+                this.comboBox1.Enabled = false;
+                UpdateTreeAsync();
             }
         }
 
-
-
-        private void runToolStripMenuItem1_Click(object sender, EventArgs e)
+        private void UpdateTreeAsync()
         {
-
+            Task.Run(() =>
+            {
+                var nodes = ExecDotnetTest((curr) =>
+                {
+                    this.richTextBox1.Invoke(AppendLog, curr);
+                });
+                this.TestTree.Invoke(UpdateTree, nodes);
+                this.comboBox1.Invoke(FillSearchBox);
+                this.comboBox1.Invoke(() =>
+                {
+                    this.comboBox1.Enabled = true;
+                });
+            });
         }
 
         private void buildToolStripMenuItem_Click(object sender, EventArgs e)
@@ -326,6 +324,58 @@ namespace TestRunner
                 }
             });
 
+        }
+        Dictionary<string, TreeNode>? treeSearchMap;
+        /// <summary>
+        /// use DFS to build dictonary.
+        /// </summary>
+        /// <param name="nodes"></param>
+        private void BuildMapOfTree(TreeNodeCollection nodes)
+        {
+            treeSearchMap ??= new();
+            foreach (var obj in nodes)
+            {
+                if (obj is TreeNode node)
+                {
+                    if (node.Nodes.Count == 0)
+                    {
+                        treeSearchMap.TryAdd(node.Name, node);
+                        treeSearchMap.TryAdd(node.Parent.Name, node.Parent);
+                        continue;
+                    }
+                    BuildMapOfTree(node.Nodes);
+                }
+            }
+        }
+        private void FillSearchBox()
+        {
+            treeSearchMap?.Clear();
+            BuildMapOfTree(this.TestTree.Nodes);
+            foreach (var k in treeSearchMap?.Keys ?? Enumerable.Empty<string>())
+            {
+                this.comboBox1.AutoCompleteCustomSource.Add(k);
+            }
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            MessageBox.Show(e.ToString());
+        }
+
+        private void comboBox1_SelectedValueChanged(object sender, EventArgs e)
+        {
+            MessageBox.Show(e.ToString());
+        }
+
+        private void comboBox1_TextChanged(object sender, EventArgs e)
+        {
+            this.timer1.Stop();
+            this.timer1.Start();
+        }
+
+        private void comboBox1_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            MessageBox.Show("comboBox1_SelectionChangeCommitted");
         }
     }
 }

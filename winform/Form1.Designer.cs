@@ -34,10 +34,9 @@
             runToolStripMenuItem = new ToolStripMenuItem();
             collapseAllToolStripMenuItem = new ToolStripMenuItem();
             expandAllToolStripMenuItem1 = new ToolStripMenuItem();
-            RefreshBtn = new Button();
             richTextBox1 = new RichTextBox();
             splitContainer1 = new SplitContainer();
-            progressBar1 = new ProgressBar();
+            comboBox1 = new ComboBox();
             menuStrip1 = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
             folderToolStripMenuItem = new ToolStripMenuItem();
@@ -47,6 +46,7 @@
             toolStripMenuItem1 = new ToolStripMenuItem();
             expandAllToolStripMenuItem = new ToolStripMenuItem();
             folderBrowserDialog1 = new FolderBrowserDialog();
+            timer1 = new System.Windows.Forms.Timer(components);
             contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
@@ -62,7 +62,7 @@
             TestTree.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point);
             TestTree.Location = new Point(0, 0);
             TestTree.Name = "TestTree";
-            TestTree.Size = new Size(1167, 780);
+            TestTree.Size = new Size(1272, 791);
             TestTree.TabIndex = 0;
             // 
             // contextMenuStrip1
@@ -92,16 +92,6 @@
             expandAllToolStripMenuItem1.Text = "Expand  All";
             expandAllToolStripMenuItem1.Click += expandAllToolStripMenuItem1_Click;
             // 
-            // RefreshBtn
-            // 
-            RefreshBtn.Location = new Point(12, 0);
-            RefreshBtn.Name = "RefreshBtn";
-            RefreshBtn.Size = new Size(75, 23);
-            RefreshBtn.TabIndex = 1;
-            RefreshBtn.Text = "Refresh";
-            RefreshBtn.UseVisualStyleBackColor = true;
-            RefreshBtn.Click += RefreshBtn_Click;
-            // 
             // richTextBox1
             // 
             richTextBox1.BackColor = SystemColors.InactiveCaption;
@@ -110,7 +100,7 @@
             richTextBox1.ForeColor = SystemColors.InfoText;
             richTextBox1.Location = new Point(0, 0);
             richTextBox1.Name = "richTextBox1";
-            richTextBox1.Size = new Size(1167, 780);
+            richTextBox1.Size = new Size(1272, 791);
             richTextBox1.TabIndex = 3;
             richTextBox1.Text = "";
             // 
@@ -122,28 +112,39 @@
             // 
             // splitContainer1.Panel1
             // 
-            splitContainer1.Panel1.Controls.Add(progressBar1);
+            splitContainer1.Panel1.Controls.Add(comboBox1);
             splitContainer1.Panel1.Controls.Add(menuStrip1);
-            splitContainer1.Size = new Size(1167, 780);
-            splitContainer1.SplitterDistance = 604;
+            splitContainer1.Size = new Size(1272, 791);
+            splitContainer1.SplitterDistance = 612;
             splitContainer1.TabIndex = 4;
             // 
-            // progressBar1
+            // comboBox1
             // 
-            progressBar1.Dock = DockStyle.Bottom;
-            progressBar1.Location = new Point(0, 757);
-            progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(521, 23);
-            progressBar1.TabIndex = 0;
+            comboBox1.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            comboBox1.AutoCompleteSource = AutoCompleteSource.CustomSource;
+            comboBox1.BackColor = SystemColors.InactiveCaption;
+            comboBox1.Dock = DockStyle.Right;
+            comboBox1.Enabled = false;
+            comboBox1.Font = new Font("Segoe UI", 11F, FontStyle.Italic, GraphicsUnit.Point);
+            comboBox1.FormattingEnabled = true;
+            comboBox1.ItemHeight = 20;
+            comboBox1.Location = new Point(285, 0);
+            comboBox1.Name = "comboBox1";
+            comboBox1.Size = new Size(327, 28);
+            comboBox1.TabIndex = 1;
+            comboBox1.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
+            comboBox1.SelectionChangeCommitted += comboBox1_SelectionChangeCommitted;
+            comboBox1.SelectedValueChanged += comboBox1_SelectedValueChanged;
+            comboBox1.TextChanged += comboBox1_TextChanged;
             // 
             // menuStrip1
             // 
-            menuStrip1.Dock = DockStyle.Right;
+            menuStrip1.Dock = DockStyle.Bottom;
             menuStrip1.GripStyle = ToolStripGripStyle.Visible;
             menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, buildToolStripMenuItem });
-            menuStrip1.Location = new Point(521, 0);
+            menuStrip1.Location = new Point(0, 742);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(83, 780);
+            menuStrip1.Size = new Size(612, 49);
             menuStrip1.TabIndex = 0;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -154,13 +155,13 @@
             fileToolStripMenuItem.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
             fileToolStripMenuItem.Margin = new Padding(10);
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            fileToolStripMenuItem.Size = new Size(56, 25);
+            fileToolStripMenuItem.Size = new Size(60, 25);
             fileToolStripMenuItem.Text = "Open";
             // 
             // folderToolStripMenuItem
             // 
             folderToolStripMenuItem.Name = "folderToolStripMenuItem";
-            folderToolStripMenuItem.Size = new Size(180, 26);
+            folderToolStripMenuItem.Size = new Size(133, 26);
             folderToolStripMenuItem.Text = "Folder...";
             folderToolStripMenuItem.Click += folderToolStripMenuItem_Click;
             // 
@@ -169,7 +170,7 @@
             buildToolStripMenuItem.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
             buildToolStripMenuItem.Margin = new Padding(10);
             buildToolStripMenuItem.Name = "buildToolStripMenuItem";
-            buildToolStripMenuItem.Size = new Size(56, 25);
+            buildToolStripMenuItem.Size = new Size(57, 25);
             buildToolStripMenuItem.Text = "Build";
             buildToolStripMenuItem.Click += buildToolStripMenuItem_Click;
             // 
@@ -204,10 +205,9 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1167, 780);
+            ClientSize = new Size(1272, 791);
             Controls.Add(splitContainer1);
             Controls.Add(richTextBox1);
-            Controls.Add(RefreshBtn);
             Controls.Add(TestTree);
             MainMenuStrip = menuStrip1;
             Name = "Form1";
@@ -226,7 +226,6 @@
         #endregion
 
         private TreeView TestTree;
-        private Button RefreshBtn;
         private ContextMenuStrip contextMenuStrip1;
 
         private RichTextBox richTextBox1;
@@ -242,8 +241,9 @@
         private MenuStrip menuStrip1;
         private ToolStripMenuItem fileToolStripMenuItem;
         private ToolStripMenuItem folderToolStripMenuItem;
-        private ProgressBar progressBar1;
         private FolderBrowserDialog folderBrowserDialog1;
         private ToolStripMenuItem buildToolStripMenuItem;
+        private ComboBox comboBox1;
+        private System.Windows.Forms.Timer timer1;
     }
 }
