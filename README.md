@@ -1,6 +1,6 @@
 # test-runner
 
-A init test runner's tool for dotnet.
+A unit test runner's tool for dotnet.
 Support fuzzy query.
 Tree of unit test.
 I use this tool and vscode to write c sharp code.​ Because the xuint project is not output logs yet.
