@@ -28,7 +28,7 @@ namespace TestRunner
             UpdateTreeAsync();
             this.timer1.Interval = 800;
             this.timer1.Tick += Timer1_Tick;
-            this.comboBox1.Enabled = false;  
+            this.comboBox1.Enabled = false;
         }
 
         private void Timer1_Tick(object? sender, EventArgs e)
@@ -68,6 +68,34 @@ namespace TestRunner
 
             }
         }
+        Dictionary<string, TreeNode> Nodes = new Dictionary<string, TreeNode>();
+        private TreeNode BuildTree(string fqdnstr)
+        {
+            var i = fqdnstr.Length - 1;
+            for (; i >= 0 && fqdnstr[i] != '.'; i--)
+            {
+            }
+            var item = fqdnstr.Substring(i + 1);
+            TreeNode current = null!;
+            if (Nodes.ContainsKey(fqdnstr))
+            {
+                current = Nodes[fqdnstr];
+            }
+            else
+            {
+                current = new TreeNode { Name = fqdnstr, Text = item };
+                Nodes.Add(fqdnstr, current);
+            }
+            if (i >= 0)
+            {
+                var parent = BuildTree(fqdnstr.Substring(0, i));
+                if (!parent.Nodes.Contains(current))
+                {
+                    parent.Nodes.Add(current);
+                }
+            }
+            return current;
+        }
         private List<TreeNode> ExecDotnetTest(Action<string> act)
         {
 
@@ -88,8 +116,6 @@ namespace TestRunner
 
             process.Start();
 
-            var dic = new Dictionary<string, TreeNode>();
-            var nodes = new List<TreeNode>();
             while (!process.StandardOutput.EndOfStream)
             {
                 var curr = process.StandardOutput.ReadLine();
@@ -98,64 +124,38 @@ namespace TestRunner
                 if (curr != null && curr.StartsWith("  "))
                 {
 
-                    curr = curr.Trim();
-                    var parent = string.Empty;
-                    foreach (var item in curr.Split(new char[] { '.' }))
-                    {
-                        if (parent == string.Empty && !dic.ContainsKey(item))
-                        {
-                            var itemNode = new TreeNode
-                            {
-                                Text = item,
-                                Name = item
-                            };
-                            nodes.Add(itemNode);
-                            dic[item] = itemNode;
-                        }
-                        if (parent != string.Empty)
-                        {
-                            var itemNode = new TreeNode
-                            {
-                                Text = item,
-                                Name = item
-                            };
-                            if (!dic.ContainsKey(item))
-                            {
-                                dic[parent].Nodes.Add(itemNode);
-                                dic[item] = itemNode;
-                            }
-
-                        }
-
-                        parent = item;
-                    }
+                    _ = BuildTree(curr.Trim());
                 }
 
             }
-            TreeNode[] newArr = new TreeNode[nodes.Count];
-            for (int i = 0; i < nodes.Count; i++)
+            List<TreeNode> topNodes = new();
+            foreach (var item in Nodes)
             {
-                TreeNode? top = null;
-                List<string> prefixArr = new List<string>();
-                var node = nodes[i];
-                while (node.Nodes.Count == 1)
+                if (item.Value.Parent == null)
                 {
-                    prefixArr.Add(node.Name);
-                    top = node.Nodes[0];
-                    node = top;
-                }
-                if (top != null)
-                {
-                    prefixArr.Add(top.Name);
-                    top.Name = string.Join('.', prefixArr);
-                    newArr[i] = top;
-                }
-                else
-                {
-                    newArr[i] = node;
+                    TreeNode? top = null;
+                    List<string> prefixArr = new();
+                    var node = item.Value;
+                    while (node.Nodes.Count == 1)
+                    {
+                        prefixArr.Add(node.Text);
+                        top = node.Nodes[0];
+                        node = top;
+                    }
+                    if (top != null)
+                    {
+                        prefixArr.Add(top.Text);
+                        top.Name = string.Join('.', prefixArr);
+                        topNodes.Add(top);
+                    }
+                    else
+                    {
+                        topNodes.Add(node);
+                    }
+
                 }
             }
-            return newArr.ToList();
+            return topNodes;
         }
 
         private void refreshToolStripMenuItem_Click(object sender, EventArgs e)
@@ -175,7 +175,7 @@ namespace TestRunner
             }
             this.TestTree.Nodes[0].Nodes.AddRange(nodes.ToArray());
         }
-        private void AppendColorLog(string msg,Color color)
+        private void AppendColorLog(string msg, Color color)
         {
             this.richTextBox1.SelectionColor = color;
             this.richTextBox1.AppendText($"{msg}\r\n");
@@ -186,12 +186,13 @@ namespace TestRunner
             var passedIndex = msg.IndexOf("Passed");
             var errorIndex = msg.IndexOf("Failed");
             var successfulIndex = msg.IndexOf("Successful");
-            if (passedIndex>-1 || successfulIndex>-1)
+            if (passedIndex > -1 || successfulIndex > -1)
             {
                 AppendColorLog(msg, Color.Green);
-            }else if (errorIndex > -1)
+            }
+            else if (errorIndex > -1)
             {
-                AppendColorLog(msg,Color.Red);
+                AppendColorLog(msg, Color.Red);
             }
             else
                 this.richTextBox1.AppendText($"{msg} \r\n");
@@ -205,7 +206,7 @@ namespace TestRunner
                 MessageBox.Show("Please select a test Node.");
                 return;
             }
-            var fqdnName = GetFQDNNodeName(this.TestTree.SelectedNode);
+            var fqdnName = this.TestTree.SelectedNode.Name; //GetFQDNNodeName(this.TestTree.SelectedNode);
             if (fqdnName == string.Empty) { return; }
             this.richTextBox1.AppendText($"FQDN TEST NAME:{fqdnName} \r\n");
             var splitChar = "=";
@@ -248,7 +249,7 @@ namespace TestRunner
             var names = new List<string>();
             while (node != null && node.Name != "root")
             {
-                names.Add(node.Name);
+                names.Add(node.Text);
                 node = node.Parent;
             }
             names.Reverse();
@@ -308,10 +309,6 @@ namespace TestRunner
                 });
                 this.TestTree.Invoke(UpdateTree, nodes);
                 this.comboBox1.Invoke(FillSearchBox);
-                this.comboBox1.Invoke(() =>
-                {
-                    this.comboBox1.Enabled = true;
-                });
             });
         }
 
@@ -356,8 +353,8 @@ namespace TestRunner
                 {
                     if (node.Nodes.Count == 0)
                     {
-                        treeSearchMap.TryAdd(node.Name, node);
-                        treeSearchMap.TryAdd(node.Parent.Name, node.Parent);
+                        treeSearchMap.TryAdd(node.Text, node);
+                        treeSearchMap.TryAdd(node.Parent.Text, node.Parent);
                         continue;
                     }
                     BuildMapOfTree(node.Nodes);
@@ -372,6 +369,7 @@ namespace TestRunner
             {
                 this.comboBox1.AutoCompleteCustomSource.Add(k);
             }
+            this.comboBox1.Enabled = true;
         }
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
